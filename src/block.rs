@@ -30,7 +30,7 @@ impl Block {
         }
     }
 
-    pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
+    pub fn _to_json_string(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
 }
