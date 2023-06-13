@@ -33,6 +33,10 @@ impl Block {
     pub fn _to_json_string(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
+
+    pub fn get_hash(&self) -> &str {
+        &self.hash
+    }
 }
 
 fn calculate_hash(data: &str, previous_hash: &str, timestamp: u64) -> String {

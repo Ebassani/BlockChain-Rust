@@ -19,4 +19,8 @@ impl Data {
     pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
+
+    pub fn _get_sender_key(&self) -> &str {
+        &self.sender
+    }
 }

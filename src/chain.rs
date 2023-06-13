@@ -1,4 +1,5 @@
 use crate::block::Block;
+use crate::data::Data;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -23,4 +24,17 @@ impl Chain {
         serde_json::to_string(self)
     }
     
+    pub fn last_block(&self) -> &Block {
+        let block = self.blocks.last().unwrap();
+        block
+    }
+
+    pub fn add_block(&mut self, data: Data) {
+        let last_block_hash = String::from(self.last_block().get_hash());
+
+        let new_block = Block::new(data.to_json_string().unwrap_or_default(), Some(last_block_hash));
+
+        self.blocks.push(new_block);
+
+    }
 }
