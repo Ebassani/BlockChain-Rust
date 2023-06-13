@@ -2,7 +2,9 @@ use std::time::SystemTime;
 extern crate crypto;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
+use serde::Serialize;
 
+#[derive(Serialize)]
 pub struct Block {
     timestamp: u64,
     data: String,
@@ -28,6 +30,9 @@ impl Block {
         }
     }
 
+    pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(self)
+    }
 }
 
 fn calculate_hash(data: &str, previous_hash: &str, timestamp: u64) -> String {
