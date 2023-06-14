@@ -1,8 +1,5 @@
-mod block;
-mod data;
-use crate::data::Data;
-mod chain;
-use crate::chain::Chain;
+mod structures;
+use crate::structures::{Chain,Data};
 
 fn main() {
     let mut chain = Chain::new();
