@@ -3,6 +3,9 @@ use std::time::SystemTime;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use serde::Serialize;
+use secp256k1::{Secp256k1, SecretKey, PublicKey};
+use rand::Rng;
+use hex;
 
 #[derive(Serialize)]
 pub struct Chain {
@@ -96,13 +99,15 @@ pub struct Data {
     amount: f64,
     sender: String,
     receiver: String,
+    signature: String
 }
 impl Data {
     pub fn new(amount: f64, sender: String, receiver: String,) -> Self {
         Data {
             amount,
             sender,
-            receiver
+            receiver,
+            signature: String::from("")
         }
     }
 
@@ -112,6 +117,32 @@ impl Data {
 
     pub fn _get_sender_key(&self) -> &str {
         &self.sender
+    }
+}
+
+#[derive(Serialize)]
+pub struct Wallet {
+    private_key: String,
+    public_key: String
+}
+impl Wallet {
+    pub fn new() -> Wallet {
+        let secp = Secp256k1::new();
+        let bytes = rand::thread_rng().gen::<[u8; 32]>();
+        
+        let private_key = SecretKey::from_slice(&bytes)
+            .expect("Invalid");
+
+        let public_key = PublicKey::from_secret_key(&secp, &private_key);
+
+        Wallet { 
+            private_key: hex::encode(&private_key[..]),
+            public_key: hex::encode(public_key.serialize_uncompressed())
+        }
+    }
+
+    pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(self)
     }
 }
 
