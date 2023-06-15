@@ -1,12 +1,13 @@
-use std::time::SystemTime;
 extern crate crypto;
+use std::time::SystemTime;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct Chain {
-    blocks: Vec<Block>
+    blocks: Vec<Block>,
+    difficulty: usize
 }
 impl Chain {
     pub fn new() -> Self {
@@ -17,7 +18,8 @@ impl Chain {
         blocks.push(genesis_block);
 
         Chain {
-            blocks
+            blocks,
+            difficulty: 2
         }
     }
 
@@ -30,22 +32,36 @@ impl Chain {
         block
     }
 
-    pub fn add_block(&mut self, data: Data) {
+    fn add_block(&mut self, block: Block) {
+        self.blocks.push(block);
+    }
+
+    pub fn mine(&mut self, data: Data) -> Block {
         let last_block_hash = String::from(self.last_block().get_hash());
 
-        let new_block = Block::new(data.to_json_string().unwrap_or_default(), Some(last_block_hash));
+        let mut block = Block::new(data.to_json_string().unwrap_or_default(),Some(last_block_hash));
+        let target = std::iter::repeat('0').take(self.difficulty).collect::<String>();
+    
+        while block.hash[..self.difficulty] != target {
+            block.nonce += 1;
+            block.hash = calculate_hash(&block.data, &block.hash, block.timestamp);
+        }
 
-        self.blocks.push(new_block);
+        let clone_block = block.clone();
 
+        self.add_block(block);
+    
+        clone_block
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Block {
     timestamp: u64,
     data: String,
     previous_hash: String,
     hash: String,
+    nonce: u64,
 }
 impl Block {
     pub fn new(data: String, previous_hash: Option<String>) -> Self {
@@ -62,6 +78,7 @@ impl Block {
             data,
             previous_hash,
             hash,
+            nonce: 0
         }
     }
 
@@ -109,5 +126,6 @@ fn calculate_hash(data: &str, previous_hash: &str, timestamp: u64) -> String {
         hasher.input_str(prev_hash);
     }
     hasher.input_str(&timestamp.to_string());
+
     hasher.result_str()
 }
