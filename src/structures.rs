@@ -6,6 +6,7 @@ use serde::Serialize;
 use secp256k1::{Secp256k1, SecretKey, PublicKey};
 use rand::Rng;
 use hex;
+use tiny_keccak::keccak256;
 
 #[derive(Serialize)]
 pub struct Chain {
@@ -123,7 +124,8 @@ impl Data {
 #[derive(Serialize)]
 pub struct Wallet {
     private_key: String,
-    public_key: String
+    public_key: String,
+    adress: String
 }
 impl Wallet {
     pub fn new() -> Wallet {
@@ -135,9 +137,14 @@ impl Wallet {
 
         let public_key = PublicKey::from_secret_key(&secp, &private_key);
 
+        let public_key = public_key.serialize_uncompressed();
+
+        let adress = gen_adress(&public_key);
+
         Wallet { 
             private_key: hex::encode(&private_key[..]),
-            public_key: hex::encode(public_key.serialize_uncompressed())
+            public_key: hex::encode(public_key),
+            adress
         }
     }
 
@@ -148,7 +155,7 @@ impl Wallet {
 
 
 /// # calculate_hash
-/// This function receives the data as borrowed String(&str) alongside the hash from the
+///  This function receives the data as borrowed String(&str) alongside the hash from the
 ///  previous block and a timestamp of current time
 fn calculate_hash(data: &str, previous_hash: &str, timestamp: u64) -> String {
     let mut hasher = Sha256::new();
@@ -159,4 +166,10 @@ fn calculate_hash(data: &str, previous_hash: &str, timestamp: u64) -> String {
     hasher.input_str(&timestamp.to_string());
 
     hasher.result_str()
+}
+
+fn gen_adress(public_key: &[u8; 65]) -> String {
+    let hash = keccak256(&public_key[1..]);
+
+    hex::encode(&hash[12..])
 }
