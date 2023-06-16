@@ -1,11 +1,10 @@
 extern crate crypto;
-use std::time::SystemTime;
-use crypto::digest::Digest;
-use crypto::sha2::Sha256;
+use std::{time::SystemTime};
+use sha2::{Sha256, Digest};
 use serde::Serialize;
-use secp256k1::{Secp256k1, SecretKey, PublicKey};
+use secp256k1::{Secp256k1, SecretKey, PublicKey, Message};
 use rand::Rng;
-use hex;
+use hex::{self};
 use tiny_keccak::keccak256;
 
 #[derive(Serialize)]
@@ -103,11 +102,11 @@ pub struct Data {
     signature: String
 }
 impl Data {
-    pub fn new(amount: f64, sender: String, receiver: String,) -> Self {
+    pub fn new(amount: f64, sender: &str, receiver: &str) -> Self {
         Data {
             amount,
-            sender,
-            receiver,
+            sender: sender.to_string(),
+            receiver: sender.to_string(),
             signature: String::from("")
         }
     }
@@ -118,6 +117,35 @@ impl Data {
 
     pub fn _get_sender_key(&self) -> &str {
         &self.sender
+    }
+    
+    pub fn _get_receiver_key(&self) -> &str {
+        &self.receiver
+    }
+
+    pub fn sign(&mut self, private_key: &str) {
+        let secp = Secp256k1::new();
+        let bytes = hex::decode(private_key).expect("Invalid private key");
+
+        let secret_key = SecretKey::from_slice(&bytes)
+            .expect("Invalid private key");
+
+        let mut hasher = Sha256::new();
+
+        hasher.update(&self.sender);
+        hasher.update(&self.receiver);
+        hasher.update(&self.amount.to_string());
+
+        /* let hash_string = hex::encode(&hasher.result_str());
+        let bytes = hash_string.as_bytes(); */
+
+        let result = hasher.finalize();
+
+        let message = Message::from_slice(&result).expect("Invalid message hash");
+
+        let signature = secp.sign(&message, &secret_key);
+
+        self.signature = hex::encode(signature.serialize_compact().to_vec());
     }
 }
 
@@ -148,7 +176,15 @@ impl Wallet {
         }
     }
 
-    pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
+    pub fn get_public_key(&self) ->&str {
+        &self.public_key
+    }
+
+    pub fn get_private_key(&self) ->&str {
+        &self.private_key
+    }
+
+    pub fn _to_json_string(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
 }
@@ -159,13 +195,13 @@ impl Wallet {
 ///  previous block and a timestamp of current time
 fn calculate_hash(data: &str, previous_hash: &str, timestamp: u64) -> String {
     let mut hasher = Sha256::new();
-    hasher.input_str(data);
+    hasher.update(data);
     if let Some(prev_hash) = Some(previous_hash) {
-        hasher.input_str(prev_hash);
+        hasher.update(prev_hash);
     }
-    hasher.input_str(&timestamp.to_string());
+    hasher.update(&timestamp.to_string());
 
-    hasher.result_str()
+    hex::encode(hasher.finalize())
 }
 
 fn gen_adress(public_key: &[u8; 65]) -> String {

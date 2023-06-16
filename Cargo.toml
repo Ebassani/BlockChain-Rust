@@ -13,3 +13,4 @@ secp256k1 = "0.16.0"
 rand = "0.8.4"
 hex = "0.4.3"
 tiny-keccak = { version = "1.4" }
+sha2 = "0.10.7"

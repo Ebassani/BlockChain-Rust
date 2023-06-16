@@ -3,13 +3,13 @@ use crate::structures::{Chain, Data, Wallet};
 
 fn main() {
 
-    let wallet = Wallet::new();
-    println!("{}", wallet.to_json_string().unwrap());
+    let sender = Wallet::new();
+    let receiver = Wallet::new();
 
+    let mut data = Data::new(102.34, sender.get_public_key(), receiver.get_public_key());
 
+    data.sign(sender.get_private_key());
     let mut chain = Chain::new();
-    
-    let data = Data::new(102.34, String::from("2345fwqyw567wqfd"), String::from("2345fwqyw567wqfd"));
     
     chain.mine(data);
     
