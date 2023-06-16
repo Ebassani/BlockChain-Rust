@@ -4,7 +4,7 @@ use sha2::{Sha256, Digest};
 use serde::Serialize;
 use secp256k1::{Secp256k1, SecretKey, PublicKey, Message};
 use rand::Rng;
-use hex::{self};
+use hex;
 use tiny_keccak::keccak256;
 
 #[derive(Serialize)]
@@ -22,7 +22,7 @@ impl Chain {
 
         Chain {
             blocks,
-            difficulty: 2
+            difficulty: 4
         }
     }
 
@@ -102,7 +102,7 @@ pub struct Data {
     signature: String
 }
 impl Data {
-    pub fn new(amount: f64, sender: &str, receiver: &str) -> Self {
+    pub fn new(amount: f64, sender: &str, _receiver: &str) -> Self {
         Data {
             amount,
             sender: sender.to_string(),
@@ -135,9 +135,6 @@ impl Data {
         hasher.update(&self.sender);
         hasher.update(&self.receiver);
         hasher.update(&self.amount.to_string());
-
-        /* let hash_string = hex::encode(&hasher.result_str());
-        let bytes = hash_string.as_bytes(); */
 
         let result = hasher.finalize();
 
@@ -182,6 +179,10 @@ impl Wallet {
 
     pub fn get_private_key(&self) ->&str {
         &self.private_key
+    }
+
+    pub fn get_adress(&self) ->&str {
+        &self.adress
     }
 
     pub fn _to_json_string(&self) -> Result<String, serde_json::Error> {
