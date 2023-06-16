@@ -15,6 +15,10 @@ fn main() {
     if data_option.is_some(){
         let mut data = data_option.unwrap();
         data.sign(wallets[0].get_private_key());
+        let verified = transaction::verify_signature(&data);
+
+        println!("{}", verified);
+
         let mut chain = Chain::new();
         
         chain.mine(data);

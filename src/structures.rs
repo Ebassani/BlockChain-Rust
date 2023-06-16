@@ -102,11 +102,11 @@ pub struct Data {
     signature: String
 }
 impl Data {
-    pub fn new(amount: f64, sender: &str, _receiver: &str) -> Self {
+    pub fn new(amount: f64, sender: &str, receiver: &str) -> Self {
         Data {
             amount,
             sender: sender.to_string(),
-            receiver: sender.to_string(),
+            receiver: receiver.to_string(),
             signature: String::from("")
         }
     }
@@ -115,12 +115,20 @@ impl Data {
         serde_json::to_string(self)
     }
 
-    pub fn _get_sender_key(&self) -> &str {
+    pub fn get_sender_key(&self) -> &str {
         &self.sender
     }
     
-    pub fn _get_receiver_key(&self) -> &str {
+    pub fn get_receiver_key(&self) -> &str {
         &self.receiver
+    }
+    
+    pub fn get_amount(&self) -> f64 {
+        self.amount
+    }
+    
+    pub fn get_signature(&self) -> &str {
+        &self.signature
     }
 
     pub fn sign(&mut self, private_key: &str) {
