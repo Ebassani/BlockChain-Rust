@@ -94,7 +94,7 @@ impl Block {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct Data {
     amount: f64,
     sender: String,
@@ -131,26 +131,27 @@ impl Data {
         &self.signature
     }
 
-    pub fn sign(&mut self, private_key: &str) {
+    pub fn sign(&mut self, private_key: &str) -> Result<(), String> {
         let secp = Secp256k1::new();
-        let bytes = hex::decode(private_key).expect("Invalid private key");
-
-        let secret_key = SecretKey::from_slice(&bytes)
-            .expect("Invalid private key");
-
+        let bytes = hex::decode(private_key).map_err(|_| "Invalid private key")?;
+    
+        let secret_key = SecretKey::from_slice(&bytes).map_err(|_| "Invalid private key")?;
+    
         let mut hasher = Sha256::new();
-
+    
         hasher.update(&self.sender);
         hasher.update(&self.receiver);
         hasher.update(&self.amount.to_string());
-
+    
         let result = hasher.finalize();
-
+    
         let message = Message::from_slice(&result).expect("Invalid message hash");
-
+    
         let signature = secp.sign(&message, &secret_key);
-
+    
         self.signature = hex::encode(signature.serialize_compact().to_vec());
+    
+        Ok(())
     }
 }
 

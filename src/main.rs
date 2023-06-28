@@ -14,10 +14,18 @@ fn main() {
     
     if data_option.is_some(){
         let mut data = data_option.unwrap();
-        data.sign(wallets[0].get_private_key());
-        let verified = transaction::verify_signature(&data);
+        //data.sign(wallets[0].get_private_key());
 
-        println!("{}", verified);
+        match data.sign(wallets[0].get_private_key()) {
+            Ok(()) => println!("Signature generated successfully"),
+            Err(err) => println!("Error: {}", err),
+        }
+        match transaction::verify_signature(&data) {
+            Ok(()) => println!("Verified: true"),
+            Err(_err) => println!("Verified: false")
+        }
+
+       
 
         let mut chain = Chain::new();
         

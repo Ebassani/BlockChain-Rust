@@ -14,11 +14,11 @@ pub fn send(sender_public_key: &str, receiver_adress: &str, amount: f64, wallets
     None
 }
 
-pub fn verify_signature(data: &Data) -> bool {
+pub fn verify_signature(data: &Data) -> Result<(), String> {
     let secp = Secp256k1::new();
 
-    let signature_bytes = hex::decode(data.get_signature()).expect("Invalid signature");
-    let signature = Signature::from_compact(&signature_bytes).expect("Invalid signature");
+    let signature_bytes = hex::decode(data.get_signature()).map_err(|_|"Invalid signature")?;
+    let signature = Signature::from_compact(&signature_bytes).map_err(|_|"Invalid signature")?;
 
     let mut hasher = Sha256::new();
     hasher.update(data.get_sender_key());
@@ -27,8 +27,13 @@ pub fn verify_signature(data: &Data) -> bool {
     let result = hasher.finalize();
     let message = Message::from_slice(&result).expect("Invalid message hash");
 
-    let public_key_bytes = hex::decode(data.get_sender_key()).expect("Invalid public key");
-    let public_key = PublicKey::from_slice(&public_key_bytes).expect("Invalid public key");
+    let public_key_bytes = hex::decode(data.get_sender_key()).map_err(|_|"Invalid public key")?;
+    let public_key = PublicKey::from_slice(&public_key_bytes).map_err(|_|"Invalid public key")?;
 
-    secp.verify(&message, &signature, &public_key).is_ok()
+    if secp.verify(&message, &signature, &public_key).is_ok() {
+        return Ok(());
+    }
+
+    Err("Signature does not match".to_string())
+    
 }
